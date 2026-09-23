@@ -179,6 +179,13 @@ duckdb_core_lib(_lib_yyjson       third_party/yyjson             duckdb_yyjson)
 duckdb_core_lib(_lib_zstd         third_party/zstd              duckdb_zstd)
 duckdb_core_lib(_lib_skiplist     third_party/skiplist           duckdb_skiplistlib)
 
+# nvcc may contribute the host compiler's library directories to the final link. Keep the C++
+# compiler selected for DuckDB and this project ahead of those directories so an older CUDA host
+# runtime cannot shadow the libstdc++ that satisfies symbols in duckdb_static.
+if(NOT MSVC AND CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
+    target_link_directories(vector_gpu_host BEFORE PUBLIC ${CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES})
+endif()
+
 # Supplies ExtensionHelper::LoadAllExtensions / LoadExtension, which duckdb_static references but does
 # not define — the build generates one loader per configured extension set. MSVC's linker repeatedly
 # scans archives until everything resolves, so listing duckdb_static before the loader that satisfies it
