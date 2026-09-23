@@ -8,8 +8,7 @@
 // AnalyzePlanShape -- the "will it PAY?" half of the cost model. Pure arithmetic over a plan tree, so
 // unlike test_gpu_cost_model.cpp this needs no GPU and runs anywhere.
 //
-// The cases below are not invented. Each one is a query from gpu_shell/bench_matrix.sh whose GPU-vs-CPU
-// ratio was actually measured (docs/SESSION_32_CACHE_BENCHMARK.md, 20M and 70M rows, warm cache), so the
+// The cases below reflect query shapes measured for GPU-vs-CPU behavior (20M and 70M rows, warm cache), so the
 // assertions check the model against measurements rather than against itself. The expression weights are
 // the ones ExpressionCostVisitor assigns; they are reproduced here as literals on purpose -- if somebody
 // retunes a weight, this file should fail and make them re-check it against those measurements.

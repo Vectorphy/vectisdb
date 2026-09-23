@@ -18,9 +18,8 @@ using namespace duckdb;
 
 namespace {
 //! Recursively walks gpu_plan collecting real, scanned data for every SCAN leaf found, flattening the
-//! results into one inputs list -- GpuEngine::ExecutePlan's stubs all currently take a flat GpuColumn
-//! list regardless of the plan's shape (single-table filter/projection, or a join's two scans), so a
-//! flat collection order matching plan traversal order is what the existing dispatch already expects.
+//! results into one inputs list. The recursive executor resolves each SCAN leaf from this collection,
+//! so its order must match the plan traversal order (including both sides of a join).
 //! FILTER/PROJECTION/AGGREGATE/JOIN nodes themselves have no data to gather (their input comes entirely
 //! from their SCAN descendants), so only SCAN nodes are handled specially here.
 //!

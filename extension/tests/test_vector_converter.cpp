@@ -60,9 +60,8 @@ unique_ptr<DataChunk> MakeChunk(vector<LogicalType> types, idx_t count) {
 }
 
 //! Builds a synthetic INT32 GpuColumn directly (no DataChunk/scan involved) -- used to test the
-//! result-packing path (ConvertGpuColumnRangeToVector/PackGpuColumnsIntoCollection) in isolation, the way
-//! a (currently hypothetical, since GpuEngine::ExecutePlan's op dispatch is still a stub) successful
-//! GpuExecutionResult would arrive.
+//! result-packing path (ConvertGpuColumnRangeToVector/PackGpuColumnsIntoCollection) in isolation, using
+//! the same GpuExecutionResult shape returned by the plan executor.
 GpuColumn MakeSyntheticInt32Column(const std::string &name, const std::vector<int32_t> &values,
                                    const std::vector<bool> &nulls, std::vector<std::vector<uint8_t>> &owned) {
 	GpuColumn column;

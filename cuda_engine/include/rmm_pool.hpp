@@ -45,7 +45,7 @@ public:
 	//!
 	//! WHY 0.85 AND NOT 1.00, since the display runs on the integrated GPU and there is no framebuffer
 	//! on this device to starve. Because the constraint turned out not to be the display. Measured in
-	//! session 27 with gpu_shell/bench_offload.sh, 16 samples a side: at 1.00 the budget admits a 36M-pair
+	//! session 27: at 1.00 the budget admits a 36M-pair
 	//! pairwise plan needing ~3296 MiB, which then peaks at 3654 MiB and runs **1.33x SLOWER than the
 	//! CPU** (4946 ms vs 3710 ms). At 0.85 the same plan is declined and falls back, matching CPU instead
 	//! of losing to it. Admitting a plan that needs essentially all of VRAM does not make it fast; it
@@ -62,7 +62,7 @@ public:
 	//! (session 26) -- so there is no crash and no wrong answer to protect against, just a slow query.
 	//! Overridden at runtime by VECTOR_GPU_VRAM_FRACTION (see rmm_pool.cpp), matching the VECTOR_GPU_*
 	//! convention used by the logger, STRICT_FP and NO_CHUNK. The right value is workload-dependent and
-	//! wants measuring with gpu_shell/bench_offload.sh, not guessing.
+	//! wants measurement, not guessing.
 	void EnsureInitialized(double fraction_of_vram = 0.85);
 
 	//! Best-effort headroom check used by TableChecker::HasVramHeadroom before committing to GPU

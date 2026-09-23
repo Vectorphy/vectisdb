@@ -17,11 +17,9 @@
 // The end-to-end coverage it used to provide now lives in gpu_shell/verify_gpu_vs_cpu.sh, which diffs
 // real SQL results between GPU and --no-gpu runs of the same binary and IS runnable today.
 //
-// Original premise, retained for context:
-// Because GpuEngine::ExecutePlan's operator stubs all return success=false (blocked on libcudf --
-// docs/KNOWN_ISSUES.md), a query that gets all the way through our optimizer pass is expected to fail at
-// physical execution with a specific, recognizable error message. That's not a bug: reaching that error
-// message IS the proof the whole pipeline up to (not including) real GPU execution works correctly.
+// Historical premise behind the assertions below: before the recursive executor was implemented, a
+// query reaching physical execution returned a recognizable failure from the per-operator stubs. Those
+// assertions are obsolete; the active executor now runs the supported plan shapes on the GPU.
 //
 // Build (no CMake wiring for this yet -- run directly, see comment at bottom of this file). Links the
 // REAL vector_gpu_cuda_engine.lib now (table_checker.cpp calls into RmmPool for the VRAM headroom check)
@@ -67,8 +65,7 @@ void Check(bool condition, const std::string &description) {
 
 //! The exact fixed prefix PhysicalGpuExecute::MaterializeOnce throws when it reaches
 //! GpuEngine::ExecutePlan and gets back success=false (see physical_gpu_execute.cpp). Matching against
-//! this string is how these tests distinguish "reached real GPU execution and it's stubbed" (expected,
-//! proves the whole pass wired up correctly) from any other, unexpected failure.
+//! this legacy string was used to distinguish the old stub failure from other unexpected failures.
 const char *GPU_STUB_ERROR_PREFIX = "PhysicalGpuExecute: GPU execution failed";
 
 Connection MakeConnection(DBConfig &config) {

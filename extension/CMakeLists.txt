@@ -8,8 +8,8 @@
 #   https://github.com/duckdb/extension-template
 #
 # Typical wiring (once dropped into an extension-template checkout):
-#   1. Point the template's vcpkg/CMake config at this DuckDB source tree (this repo, branch
-#      vector-commits) instead of a released DuckDB version, so headers match exactly.
+#   1. Point the template's vcpkg/CMake config at DuckDB commit af1b4a9bd2 instead of a released
+#      DuckDB version, so headers match the version pinned for VectisDB 1.0.0.
 #   2. Add this directory's sources to the template's extension target.
 #   3. Link vector_gpu_cuda_engine (see ../cuda_engine/CMakeLists.txt) as an additional static library.
 

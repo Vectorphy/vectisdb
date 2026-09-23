@@ -29,6 +29,11 @@ commit, with the `core_functions` and `parquet` extensions linked statically. Se
 - CUDA Toolkit with NVCC, NVRTC, and a compatible NVIDIA driver
 - An NVIDIA GPU to run device tests or GPU integration checks
 
+For WSL with CUDA Toolkit 12.4, use GCC 13 for both the DuckDB core build and VectisDB. NVCC 12.4
+supports GCC through 13.2 and rejects GCC 15; see NVIDIA's [CUDA 12.4 host compiler
+matrix](https://docs.nvidia.com/cuda/archive/12.4.0/cuda-installation-guide-linux/#host-compiler-support-policy).
+The WSL commands in [SETUP.md](SETUP.md) use GCC 13 and separate shell and test build directories.
+
 The GitHub Actions workflow compiles the CUDA backend and runs its device-independent checks. GPU
 execution tests need a machine with an NVIDIA GPU and are not run on GitHub-hosted runners.
 
@@ -45,3 +50,20 @@ The hook checks staged whitespace. GitHub Actions also checks shell syntax and b
 Pushing a `v*` tag starts the developer-release workflow, which creates a GitHub prerelease
 and attaches a source ZIP with a SHA-256 checksum. The CUDA backend is distributed as source because it
 must be compiled for the target CUDA architecture.
+
+## Project files
+
+- [Contributing](CONTRIBUTING.md) explains how to report a bug and prepare a change.
+- [Code of Conduct](CODE_OF_CONDUCT.md) sets expectations for project discussions.
+- [Security policy](SECURITY.md) explains how to report a vulnerability privately.
+- [AI policy](AI_POLICY.md) covers the use of AI tools in contributions.
+- [License](LICENSE) contains the VectisDB license and third-party notices.
+
+Use the issue forms under `.github/ISSUE_TEMPLATE/` for bugs and feature requests. Pull requests
+use `.github/PULL_REQUEST_TEMPLATE.md`.
+
+## Citation
+
+If you use or build on VectisDB, cite the project and credit Vectorphy. GitHub reads the citation
+metadata in [`CITATION.cff`](CITATION.cff) and offers it through the repository's **Cite this
+repository** control.

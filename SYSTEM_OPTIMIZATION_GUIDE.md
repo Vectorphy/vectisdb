@@ -10,10 +10,15 @@ The backend defaults to CUDA architecture `75` in `cuda_engine/CMakeLists.txt`. 
 configure the build:
 
 ```sh
-cmake -S . -B build -DCMAKE_CUDA_ARCHITECTURES=89
+cmake -S . -B build \
+  -DCMAKE_CXX_COMPILER=/usr/bin/g++-13 \
+  -DCMAKE_CUDA_HOST_COMPILER=/usr/bin/g++-13 \
+  -DCMAKE_CUDA_ARCHITECTURES=89
 ```
 
-Choose a value supported by your CUDA Toolkit and deployment GPUs. Reconfigure when changing the target.
+This compiler selection is for WSL with CUDA Toolkit 12.4; use a CUDA-supported host compiler for other
+toolkit versions and platforms. Choose an architecture supported by your CUDA Toolkit and deployment
+GPUs. Reconfigure when changing the target. See [SETUP.md](SETUP.md) for complete build commands.
 
 ## Device memory budgets
 

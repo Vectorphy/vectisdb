@@ -486,9 +486,8 @@ static std::shared_ptr<GpuPlanNode> TranslateToGpuPlan(LogicalOperator &op, cons
 			// *output shapes* (e.g. SEMI returns only left-side rows with a match, no right-side columns
 			// at all) that a plain build_keys/probe_keys GpuOpType::HASH_JOIN node cannot represent. Before
 			// this check, TableChecker's operator whitelist alone would have let any of these reach here
-			// and be silently mistranslated as an ordinary equi-join shape -- harmless right now only
-			// because GpuEngine::ExecutePlan's HASH_JOIN path is itself still a stub (see
-			// docs/KNOWN_ISSUES.md), but a real correctness bug waiting to fire the moment it isn't.
+			// and be silently mistranslated as an ordinary equi-join shape. This guard preserves join
+			// semantics because the executor supports only the INNER equi-join shape represented here.
 			throw GpuUnsupportedExpression("hash join translation only supports JoinType::INNER");
 		}
 		node->op_type = GpuOpType::HASH_JOIN;

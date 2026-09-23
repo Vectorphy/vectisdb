@@ -305,8 +305,8 @@ struct GpuPlanShape {
 	//!
 	//! It counts ROWS of work and cannot tell `a + b` from `sin(a)+cos(b)+exp(c)`: both amplify by 1.0,
 	//! one loses to the CPU and one beats it. That blind spot is why every heavy-math projection needed
-	//! VECTOR_GPU_MIN_AMPLIFICATION=0 to route at all (see gpu_shell/bench_matrix.sh, which sets it for
-	//! exactly this reason). Still computed, and still consulted for INCONCLUSIVE plans, because it is
+	//! VECTOR_GPU_MIN_AMPLIFICATION=0 to route at all in those measurements. Still computed, and still
+	//! consulted for INCONCLUSIVE plans, because it is
 	//! the only signal that sees work no expression carries -- a cross product's n*m expansion, a
 	//! group-by's sort.
 	double amplification = 0.0;

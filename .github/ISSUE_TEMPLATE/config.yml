@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Vectorphy/vectisdb/security/advisories/new
+    about: Report vulnerabilities privately. Do not post exploit details in an issue.
+  - name: Contribution guide
+    url: https://github.com/Vectorphy/vectisdb/blob/main/CONTRIBUTING.md
+    about: Read this before preparing a code change.

@@ -1,0 +1,48 @@
+name: Bug report
+description: Report incorrect behavior or a reproducible failure.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        For security vulnerabilities, follow [SECURITY.md](https://github.com/Vectorphy/vectisdb/blob/main/SECURITY.md)
+        instead of opening a public issue.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the result you saw and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the command or query and a small input if possible.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: vectisdb-version
+    attributes:
+      label: VectisDB version or commit
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Build and hardware details
+      description: Include OS, compiler, CUDA Toolkit, GPU model, driver, and DuckDB commit when relevant.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Remove credentials and private data before posting logs.
+      render: text
+    validations:
+      required: false

@@ -6,10 +6,9 @@
 // libcudf itself isn't used here) — Thrust ships with the CUDA Toolkit and needed no extra setup on this
 // machine, unlike RAPIDS.
 //
-// GpuOpType::FILTER dispatch through GpuEngine::ExecutePlan (ExecuteFilterStub below) remains a stub:
-// wiring it up requires the LogicalOperator -> GpuPlanNode translation (tracked in
-// docs/EXECUTION_TRACKER.md #16) which doesn't exist yet. FilterGreaterThanInt32 itself is real, compiled,
-// and unit-tested independently of that translation layer — see cuda_engine/tests/test_gpu_filter.cu.
+// ExecuteFilterStub below is a legacy per-operator entry point and is not used by the active recursive
+// GpuEngine::ExecutePlan dispatcher. The dispatcher handles FILTER nodes through the fused expression
+// path. FilterGreaterThanInt32 remains a separate Thrust primitive with its own unit tests.
 
 #include "gpu_filter_ops.hpp"
 #include "gpu_engine.hpp"
