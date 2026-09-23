@@ -1,0 +1,20 @@
+# Local scratch, never committed.
+#
+# The bench*.duckdb fixtures in particular: they are REGENERABLE benchmark data (see
+# make_bench_fixtures.sh), they are 143 MB and 499 MB, and GitHub hard-rejects any push containing a blob
+# over 100 MB -- committing one does not just bloat the repo, it makes the whole branch unpushable.
+*.duckdb
+*.duckdb.wal
+*.log
+build/
+build_baseline/
+gpulog*/
+
+# Benchmark scripts, fixtures, queries, and utilities
+bench_*.sh
+bench_*.sql
+collect_phases.sh
+make_bench_fixture*.sh
+massive_compute.sql
+retail_bench.sql
+tail_gpu_log.py

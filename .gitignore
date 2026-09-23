@@ -1,0 +1,56 @@
+# Build directories
+build/
+build_*/
+bin/
+lib/
+out/
+target/
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile.cmake
+compile_commands.json
+*.ninja
+.ninja_*
+
+# Compiled binaries and libraries
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+*.exe
+*.exp
+*.ilk
+*.pdb
+
+# NVRTC & GPU Cache
+.nvrtc_cache/
+gpulog/
+*.jsonl
+*.log
+
+# Databases & Benchmarks
+*.duckdb
+*.duckdb.wal
+bench*.duckdb
+*.parquet
+*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+env/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
