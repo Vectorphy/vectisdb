@@ -36,6 +36,9 @@ fi
 # amplification heuristic correctly declines in production. Every case here needs it offloaded to test
 # anything, so the heuristic is switched off for this suite only -- the same override bench_offload.sh uses.
 export VECTOR_GPU_MIN_AMPLIFICATION=0
+# Split streaming projections consume DuckDB's already-filtered input and cannot publish a complete table
+# into GpuColumnCache. Keep this cache-specific suite on PhysicalGpuExecute, whose scans stage full columns.
+export VECTOR_GPU_STREAM_PIPELINE=0
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

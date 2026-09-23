@@ -274,16 +274,9 @@ static GpuAggregate TranslateAggregate(const Expression &expr, const ColumnBindi
 		return result;
 	}
 	if (function_name == "sum") {
-		if (result.output_type == GpuValueType::FLOAT64) {
-			if (input_type != GpuValueType::FLOAT32 && input_type != GpuValueType::FLOAT64) {
-				throw GpuUnsupportedExpression("GPU SUM over floats supports only FLOAT/DOUBLE input");
-			}
-		} else if (result.output_type == GpuValueType::HUGEINT) {
-			if (input_type != GpuValueType::INT16 && input_type != GpuValueType::INT32 && input_type != GpuValueType::INT64 && input_type != GpuValueType::HUGEINT) {
-				throw GpuUnsupportedExpression("GPU SUM over integers supports only INT16/32/64/128 input");
-			}
-		} else {
-			throw GpuUnsupportedExpression("GPU SUM supports only DOUBLE or HUGEINT output");
+		if (result.output_type != GpuValueType::FLOAT64 ||
+		    (input_type != GpuValueType::FLOAT32 && input_type != GpuValueType::FLOAT64)) {
+			throw GpuUnsupportedExpression("GPU SUM supports only FLOAT/DOUBLE input producing DOUBLE");
 		}
 		result.kind = GpuAggregateKind::SUM;
 		return result;
