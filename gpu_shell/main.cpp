@@ -1,4 +1,4 @@
-// duckdb_gpu — a DuckDB shell with the vector-gpu-engine optimizer extension statically linked in.
+// duckdb_gpu — a DuckDB shell with the VectisDB optimizer extension statically linked in.
 //
 // This is the piece that makes GPU offload actually happen for real SQL. Registering
 // RegisterGpuOffloadOptimizer on the DBConfig *before* the database is opened installs the optimizer
@@ -7,13 +7,13 @@
 // (cuda_engine/src/gpu_executor.cu). Plans that aren't offloadable are left untouched and run on
 // DuckDB's normal CPU path.
 //
-// CLI is deliberately a subset of duckdb.exe's, matching exactly what the GUI server invokes:
+// CLI is a subset of duckdb.exe's, with an optional persistent query mode:
 //   duckdb_gpu <db-path> [-json] -c "<sql>"
 //   duckdb_gpu <db-path> [-json] --gpu-trace -c "<sql>"   (adds a GPU-offload report to stderr)
 //   duckdb_gpu <db-path> [-json] --serve                  (persistent loop; blocks ended by --END--)
 //   duckdb_gpu --gpu-probe                                (reports GPU/engine availability)
 //
-// -json prints one JSON array per result-producing statement, same shape the GUI already parses.
+// -json prints one JSON array per result-producing statement, in DuckDB CLI-style output.
 
 #include "duckdb.hpp"
 #include "gpu_offload_extension.hpp"
@@ -72,8 +72,8 @@ std::string JsonEscape(const std::string &input) {
 
 //! Renders one materialized result as a JSON array of row objects (duckdb.exe -json's shape).
 //! `max_rows` (0 = unlimited) bounds how many rows are PRINTED — the query itself still executes in
-//! full. This is what lets the GUI display a bounded page of a billion-row result without rewriting
-//! the user's SQL: wrapping the query in a LIMIT would change the plan shape and, in particular,
+//! full. Callers can request a bounded page without rewriting the user's SQL: wrapping the query in a
+//! LIMIT would change the plan shape and, in particular,
 //! prevent the optimizer from offloading it to the GPU.
 void PrintJson(MaterializedQueryResult &result, idx_t max_rows) {
 	auto &names = result.names;
@@ -134,7 +134,7 @@ void PrintJson(MaterializedQueryResult &result, idx_t max_rows) {
 }
 
 int RunProbe() {
-	std::cout << "vector-gpu-engine probe\n";
+	std::cout << "VectisDB GPU probe\n";
 	try {
 		DBConfig config;
 		vector_gpu::RegisterGpuOffloadOptimizer(config);
@@ -183,8 +183,7 @@ int main(int argc, char **argv) {
 		} else if (arg == "--no-gpu") {
 			// Skips registering the optimizer entirely, so nothing can be offloaded. This is a true
 			// A/B switch — the same binary, same data, same SQL, with the GPU path simply absent —
-			// which is what makes the GUI's developer toggle a meaningful comparison rather than a
-			// cosmetic label.
+			// which makes --no-gpu a CPU comparison using the same database and SQL.
 			gpu_enabled = false;
 		} else if (arg == "-c") {
 			if (i + 1 >= argc) {
@@ -230,10 +229,9 @@ int main(int argc, char **argv) {
 
 		// Create the CUDA context concurrently with opening the database and planning the query, instead
 		// of paying for it serially on the routing path. Measured: creating the context is ~100ms and was
-		// the whole `optimize` phase once the VRAM arena stopped being reserved eagerly (see
-		// docs/TODO.md §1/§5); opening the DB and planning is comparable work that needs no GPU, so the
-		// two overlap almost perfectly. RmmPool::EnsureInitialized is idempotent and mutex-guarded, so the
-		// optimizer thread racing this one simply finds the work already done (or waits briefly for it).
+		// much of cold-start latency once the VRAM arena stopped being reserved eagerly; opening the DB and
+		// planning is comparable work that needs no GPU, so the two overlap. RmmPool::EnsureInitialized is
+		// idempotent and mutex-guarded, so the optimizer thread finds the work done or waits briefly for it.
 		// Joined below rather than detached: a detached thread could still be touching the RmmPool
 		// singleton while static destructors run at process exit.
 		// OPT-IN as of session 15, and off by default. Warming the context concurrently helps only when
@@ -290,9 +288,7 @@ int main(int argc, char **argv) {
 		if (serve) {
 			// Persistent mode: keep the database, the CUDA context and the NVRTC kernel cache alive across
 			// many queries, so per-process startup is paid ONCE instead of once per query. That startup is
-			// ~340ms of a cold single-query run versus ~18ms of genuine per-query work (docs/TODO.md §1),
-			// so for a caller issuing many queries -- notably gui/server.py, which currently spawns a fresh
-			// duckdb_gpu per query -- this is the single largest win available.
+			// so callers issuing many queries reuse database setup, the CUDA context and compiled kernels.
 			//
 			// Protocol, deliberately trivial and newline-safe: read lines until one is exactly "--END--",
 			// run the accumulated SQL, then print a line that is exactly "--DONE--" and flush. Errors go to

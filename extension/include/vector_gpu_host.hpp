@@ -8,20 +8,18 @@
 // In-process C++ API for embedding the GPU-offload engine directly, instead of spawning duckdb_gpu.exe
 // and talking to it over pipes.
 //
-// WHY THIS EXISTS. Every query through the subprocess path pays per-process CUDA startup -- ~80 ms warm,
-// ~155 ms cold (measured, docs/TODO.md P1 item 3) -- plus NVRTC compilation of the first kernel, ~125 ms,
-// because the kernel cache dies with the process. A host that keeps one process alive pays both exactly
-// once. It also removes the pipe protocol, its --END--/--DONE-- framing, and the timeout/restart handling
-// that a child process forces on every caller.
+// WHY THIS EXISTS. Every query through the subprocess path pays per-process CUDA startup and compiles
+// its first NVRTC kernel because the kernel cache dies with the process. A host that keeps one process
+// alive reuses both. It also removes the pipe protocol, its --END--/--DONE-- framing, and the
+// timeout/restart handling that a child process forces on every caller.
 //
 // It ALSO fixes a resource bug that the subprocess design cannot: RmmPool computes its VRAM budget as a
 // fraction of free device memory PER PROCESS. Two child processes each independently conclude they may
 // use ~85% of the card and then both page -- silently, since WDDM raises no out-of-memory error. One
 // process means one pool and one honest budget.
 //
-// DELIBERATELY NO duckdb.hpp HERE. This header is what a GUI includes; dragging DuckDB's headers (and
-// their compile cost and macro surface) into that build is exactly what a boundary is for. Everything
-// DuckDB-shaped lives behind Session::Impl.
+// DELIBERATELY NO duckdb.hpp HERE. Keeping DuckDB headers and macros out of this public API reduces the
+// compile-time and dependency surface for callers. Everything DuckDB-shaped lives behind Session::Impl.
 
 namespace vector_gpu {
 

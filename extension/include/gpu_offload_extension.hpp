@@ -10,7 +10,7 @@ namespace vector_gpu {
 //! translation) on `config`. Factored out of the DUCKDB_CPP_EXTENSION_ENTRY entrypoint so it can also be
 //! called directly by tests that link statically against DuckDB instead of loading a `.duckdb_extension`
 //! at runtime (see extension/tests/test_translator_integration.cpp), and by the statically-linked
-//! duckdb_gpu shell (vector-gpu-engine/gpu_shell).
+//! duckdb_gpu shell (VectisDB/gpu_shell).
 void RegisterGpuOffloadOptimizer(duckdb::DBConfig &config);
 
 //! Enables counting of plans the optimizer actually rewrote for GPU execution. Off by default so the

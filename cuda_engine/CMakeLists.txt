@@ -1,21 +1,17 @@
-# cuda_engine — standalone library, no DuckDB dependency. Buildable and testable on its own against a
-# real CUDA install (verified against CUDA Toolkit 13.3 on Windows + an NVIDIA GTX 1650, compute
-# capability 7.5). Not wired into the root DuckDB CMakeLists.txt (per the minimum-change goal).
+# cuda_engine — the CUDA backend, with no DuckDB dependency. It can be built directly or through the
+# VectisDB root project.
 #
-# Build + run tests:
-#   cmake -S vector-gpu-engine/cuda_engine -B vector-gpu-engine/cuda_engine/build -G Ninja ^
-#         -DCMAKE_BUILD_TYPE=Release
-#   cmake --build vector-gpu-engine/cuda_engine/build
-#   ctest --test-dir vector-gpu-engine/cuda_engine/build --output-on-failure
+# Build + run the device-independent checks from the repository root:
+#   cmake -S . -B build -G Ninja -DVECTISDB_BUILD_TESTS=ON
+#   cmake --build build --parallel
+#   ctest --test-dir build --output-on-failure -R "^(test_kernel_cache|test_gpu_logger|test_plan_shape)$"
 #
 # On Windows: run from a Developer Command Prompt / after vcvarsall.bat x64, or point
 # CMAKE_CUDA_HOST_COMPILER at cl.exe explicitly, so nvcc can find the MSVC host compiler. On Linux/WSL2,
 # the GCC/Clang host compiler is picked up automatically -- no equivalent step needed.
 #
-# libcudf/RMM-dependent operators (hash join, group-by) remain source-level stubs — see
-# docs/KNOWN_ISSUES.md for why (RAPIDS needs WSL2/Linux; this is where that dependency can now actually be
-# wired up). Everything else here (RMM-pool-equivalent allocator, NVRTC code generator, kernel cache,
-# Thrust-based filter) is real, builds on both platforms, and is covered by cuda_engine/tests/.
+# Some operators are implemented directly with CUDA and Thrust. The test list is in tests/CMakeLists.txt;
+# GPU-dependent cases need a physical NVIDIA device at runtime.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -23,7 +19,7 @@ cmake_minimum_required(VERSION 3.20)
 # runtime setting. Without this, cuda_engine defaults to /MD (CMake's normal MSVC default), and linking
 # this library directly into an extension binary alongside duckdb_static fails with LNK2038 runtime
 # library mismatches -- hit this for real the first time extension code actually called into cuda_engine
-# (TableChecker::HasVramHeadroom -> RmmPool). See docs/EXECUTION_TRACKER.md. Irrelevant on Linux/Clang,
+# (TableChecker::HasVramHeadroom -> RmmPool). Irrelevant on Linux/Clang,
 # where there is no MSVC runtime to select -- guarded so CMP0091/CMAKE_MSVC_RUNTIME_LIBRARY are never
 # touched off Windows.
 # CMAKE_HOST_WIN32, not MSVC: this block runs BEFORE project(), and MSVC is only defined by project()

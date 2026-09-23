@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  git-check:
+    name: Git and shell checks
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check pull request whitespace
+        if: github.event_name == 'pull_request'
+        run: git diff --check '${{ github.event.pull_request.base.sha }}...HEAD'
+
+      - name: Check commit whitespace
+        if: github.event_name != 'pull_request'
+        run: git show --check --oneline HEAD
+
+      - name: Check verification script syntax
+        run: |
+          bash -n gpu_shell/verify_gpu_vs_cpu.sh
+          bash -n gpu_shell/verify_gpu_cache.sh
+
+  cuda-backend:
+    name: Build CUDA backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Build backend and run device-independent checks
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            -w /workspace \
+            nvidia/cuda:13.3.0-devel-ubuntu24.04 \
+            bash -lc '
+              apt-get update &&
+              DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake ninja-build &&
+              cmake -S cuda_engine -B build/ci -G Ninja -DVECTOR_GPU_BUILD_TESTS=ON -DCMAKE_CUDA_ARCHITECTURES=75 &&
+              cmake --build build/ci --parallel 2 &&
+              ctest --test-dir build/ci --output-on-failure -R "^(test_kernel_cache|test_gpu_logger|test_plan_shape)$"
+            '

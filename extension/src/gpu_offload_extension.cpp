@@ -1505,7 +1505,7 @@ void RegisterGpuOffloadOptimizer(DBConfig &config) {
 } // namespace vector_gpu
 
 // The loadable-extension entry point. Compiled only for a real .duckdb_extension build; the
-// statically-linked duckdb_gpu binary (vector-gpu-engine/gpu_shell) instead calls
+// statically-linked duckdb_gpu binary (VectisDB/gpu_shell) instead calls
 // vector_gpu::RegisterGpuOffloadOptimizer(config) directly before opening the database, so it must not
 // pull in the extension-loader macro machinery.
 #ifdef VECTOR_GPU_LOADABLE_EXTENSION

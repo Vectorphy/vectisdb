@@ -1,23 +1,13 @@
-# duckdb_gpu — DuckDB shell with the vector-gpu-engine optimizer extension statically linked.
+# duckdb_gpu — DuckDB shell with the VectisDB optimizer extension statically linked.
 #
 # This is what turns "the routing decision says GPU" into "the query actually executed on the GPU":
 # it links the extension sources (optimizer + physical operator + converters) and cuda_engine against
 # this repo's already-built duckdb_static(.lib|.a), and registers the optimizer before opening the
 # database.
 #
-# Build on Windows (from a Developer Command Prompt, or let build_gpu_shell.bat set up MSVC for you):
-#   cmake -S vector-gpu-engine/gpu_shell -B vector-gpu-engine/gpu_shell/build -G Ninja ^
-#         -DCMAKE_BUILD_TYPE=Release
-#   cmake --build vector-gpu-engine/gpu_shell/build
-#
-# Build on Linux/WSL2:
-#   cmake -S vector-gpu-engine/gpu_shell -B vector-gpu-engine/gpu_shell/build -G Ninja \
-#         -DCMAKE_BUILD_TYPE=Release -DBUILD_CORE=/path/to/build/reldebug
-#   cmake --build vector-gpu-engine/gpu_shell/build
-#
-# Requires BUILD_CORE (default: <repo-root>/build_core, override with -DBUILD_CORE=...) to be an
-# existing DuckDB build of THIS source tree with core_functions and parquet bundled statically
-# (headers and libs must match) — e.g. `CORE_EXTENSIONS="core_functions;parquet" make reldebug`.
+# Build instructions and the DuckDB source pin are in ../SETUP.md.
+# BUILD_CORE must point to a DuckDB build at the matching source revision, with core_functions and
+# parquet linked statically.
 
 cmake_minimum_required(VERSION 3.20)
 
@@ -34,7 +24,7 @@ if(CMAKE_HOST_WIN32)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
-project(duckdb_gpu CXX)
+project(vectisdb_duckdb_shell LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,8 +33,9 @@ if(NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fPIC")
 endif()
 
-set(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
-set(BUILD_CORE "${REPO_ROOT}/build_core" CACHE PATH "Path to a DuckDB build of this source tree (core_functions + parquet bundled statically)")
+set(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(DUCKDB_SOURCE "${REPO_ROOT}/../duckdb-core" CACHE PATH "Path to the pinned DuckDB source tree")
+set(BUILD_CORE "${DUCKDB_SOURCE}/build/reldebug" CACHE PATH "Path to its core_functions + parquet build output")
 set(EXT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../extension")
 
 # CMAKE_STATIC_LIBRARY_PREFIX/SUFFIX resolve to ("", ".lib") under MSVC and ("lib", ".a") under
@@ -61,12 +52,11 @@ endif()
 # cuda_engine (the actual GPU executor) as a subproject, so one build produces everything.
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../cuda_engine" cuda_engine_build)
 
-# vector_gpu_host — the engine as a LINKABLE LIBRARY rather than only an executable.
+# vector_gpu_host — the engine as a linkable library as well as an executable.
 #
 # Everything that used to be compiled straight into duckdb_gpu now lives here, plus vector_gpu_host.cpp,
-# which wraps it in a small C++ API (extension/include/vector_gpu_host.hpp). A GUI links this and calls
-# Session::Query() directly -- no child process, no pipe protocol, and critically ONE RmmPool for the
-# whole application instead of one per spawned process each claiming ~85% of the card.
+# which wraps it in a small C++ API (extension/include/vector_gpu_host.hpp). Applications can call
+# Session::Query() in-process and share one RmmPool instead of starting a separate process per query.
 add_library(vector_gpu_host STATIC
     ${EXT_DIR}/src/vector_gpu_host.cpp
     ${EXT_DIR}/src/gpu_offload_extension.cpp
@@ -86,40 +76,40 @@ target_include_directories(vector_gpu_host PUBLIC ${EXT_DIR}/include)
 target_include_directories(vector_gpu_host PRIVATE
     ${EXT_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../cuda_engine/include
-    ${REPO_ROOT}/src/include
-    ${REPO_ROOT}/third_party/fmt/include
-    ${REPO_ROOT}/third_party/re2
-    ${REPO_ROOT}/third_party/hyperloglog
-    ${REPO_ROOT}/third_party/fastpforlib
-    ${REPO_ROOT}/third_party/fsst
-    ${REPO_ROOT}/third_party/miniz
-    ${REPO_ROOT}/third_party/utf8proc/include
-    ${REPO_ROOT}/third_party/concurrentqueue
-    ${REPO_ROOT}/third_party/pcg
-    ${REPO_ROOT}/third_party/tdigest
-    ${REPO_ROOT}/third_party/mbedtls/include
-    ${REPO_ROOT}/third_party/yyjson/include
-    ${REPO_ROOT}/third_party/skiplist
+    ${DUCKDB_SOURCE}/src/include
+    ${DUCKDB_SOURCE}/third_party/fmt/include
+    ${DUCKDB_SOURCE}/third_party/re2
+    ${DUCKDB_SOURCE}/third_party/hyperloglog
+    ${DUCKDB_SOURCE}/third_party/fastpforlib
+    ${DUCKDB_SOURCE}/third_party/fsst
+    ${DUCKDB_SOURCE}/third_party/miniz
+    ${DUCKDB_SOURCE}/third_party/utf8proc/include
+    ${DUCKDB_SOURCE}/third_party/concurrentqueue
+    ${DUCKDB_SOURCE}/third_party/pcg
+    ${DUCKDB_SOURCE}/third_party/tdigest
+    ${DUCKDB_SOURCE}/third_party/mbedtls/include
+    ${DUCKDB_SOURCE}/third_party/yyjson/include
+    ${DUCKDB_SOURCE}/third_party/skiplist
 )
 
 add_executable(duckdb_gpu main.cpp)
 target_include_directories(duckdb_gpu PRIVATE
     ${EXT_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../cuda_engine/include
-    ${REPO_ROOT}/src/include
-    ${REPO_ROOT}/third_party/fmt/include
-    ${REPO_ROOT}/third_party/re2
-    ${REPO_ROOT}/third_party/hyperloglog
-    ${REPO_ROOT}/third_party/fastpforlib
-    ${REPO_ROOT}/third_party/fsst
-    ${REPO_ROOT}/third_party/miniz
-    ${REPO_ROOT}/third_party/utf8proc/include
-    ${REPO_ROOT}/third_party/concurrentqueue
-    ${REPO_ROOT}/third_party/pcg
-    ${REPO_ROOT}/third_party/tdigest
-    ${REPO_ROOT}/third_party/mbedtls/include
-    ${REPO_ROOT}/third_party/yyjson/include
-    ${REPO_ROOT}/third_party/skiplist
+    ${DUCKDB_SOURCE}/src/include
+    ${DUCKDB_SOURCE}/third_party/fmt/include
+    ${DUCKDB_SOURCE}/third_party/re2
+    ${DUCKDB_SOURCE}/third_party/hyperloglog
+    ${DUCKDB_SOURCE}/third_party/fastpforlib
+    ${DUCKDB_SOURCE}/third_party/fsst
+    ${DUCKDB_SOURCE}/third_party/miniz
+    ${DUCKDB_SOURCE}/third_party/utf8proc/include
+    ${DUCKDB_SOURCE}/third_party/concurrentqueue
+    ${DUCKDB_SOURCE}/third_party/pcg
+    ${DUCKDB_SOURCE}/third_party/tdigest
+    ${DUCKDB_SOURCE}/third_party/mbedtls/include
+    ${DUCKDB_SOURCE}/third_party/yyjson/include
+    ${DUCKDB_SOURCE}/third_party/skiplist
 )
 
 # Proves the in-process path: two isolated Sessions in ONE process, with per-query stats.
@@ -134,20 +124,20 @@ add_executable(test_batch_accumulator test_batch_accumulator.cpp)
 target_include_directories(test_batch_accumulator PRIVATE
     ${EXT_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../cuda_engine/include
-    ${REPO_ROOT}/src/include
-    ${REPO_ROOT}/third_party/fmt/include
-    ${REPO_ROOT}/third_party/re2
-    ${REPO_ROOT}/third_party/hyperloglog
-    ${REPO_ROOT}/third_party/fastpforlib
-    ${REPO_ROOT}/third_party/fsst
-    ${REPO_ROOT}/third_party/miniz
-    ${REPO_ROOT}/third_party/utf8proc/include
-    ${REPO_ROOT}/third_party/concurrentqueue
-    ${REPO_ROOT}/third_party/pcg
-    ${REPO_ROOT}/third_party/tdigest
-    ${REPO_ROOT}/third_party/mbedtls/include
-    ${REPO_ROOT}/third_party/yyjson/include
-    ${REPO_ROOT}/third_party/skiplist
+    ${DUCKDB_SOURCE}/src/include
+    ${DUCKDB_SOURCE}/third_party/fmt/include
+    ${DUCKDB_SOURCE}/third_party/re2
+    ${DUCKDB_SOURCE}/third_party/hyperloglog
+    ${DUCKDB_SOURCE}/third_party/fastpforlib
+    ${DUCKDB_SOURCE}/third_party/fsst
+    ${DUCKDB_SOURCE}/third_party/miniz
+    ${DUCKDB_SOURCE}/third_party/utf8proc/include
+    ${DUCKDB_SOURCE}/third_party/concurrentqueue
+    ${DUCKDB_SOURCE}/third_party/pcg
+    ${DUCKDB_SOURCE}/third_party/tdigest
+    ${DUCKDB_SOURCE}/third_party/mbedtls/include
+    ${DUCKDB_SOURCE}/third_party/yyjson/include
+    ${DUCKDB_SOURCE}/third_party/skiplist
 )
 target_link_libraries(test_batch_accumulator PRIVATE vector_gpu_host)
 
@@ -156,20 +146,20 @@ add_executable(bench_batch_accumulator bench_batch_accumulator.cpp)
 target_include_directories(bench_batch_accumulator PRIVATE
     ${EXT_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/../cuda_engine/include
-    ${REPO_ROOT}/src/include
-    ${REPO_ROOT}/third_party/fmt/include
-    ${REPO_ROOT}/third_party/re2
-    ${REPO_ROOT}/third_party/hyperloglog
-    ${REPO_ROOT}/third_party/fastpforlib
-    ${REPO_ROOT}/third_party/fsst
-    ${REPO_ROOT}/third_party/miniz
-    ${REPO_ROOT}/third_party/utf8proc/include
-    ${REPO_ROOT}/third_party/concurrentqueue
-    ${REPO_ROOT}/third_party/pcg
-    ${REPO_ROOT}/third_party/tdigest
-    ${REPO_ROOT}/third_party/mbedtls/include
-    ${REPO_ROOT}/third_party/yyjson/include
-    ${REPO_ROOT}/third_party/skiplist
+    ${DUCKDB_SOURCE}/src/include
+    ${DUCKDB_SOURCE}/third_party/fmt/include
+    ${DUCKDB_SOURCE}/third_party/re2
+    ${DUCKDB_SOURCE}/third_party/hyperloglog
+    ${DUCKDB_SOURCE}/third_party/fastpforlib
+    ${DUCKDB_SOURCE}/third_party/fsst
+    ${DUCKDB_SOURCE}/third_party/miniz
+    ${DUCKDB_SOURCE}/third_party/utf8proc/include
+    ${DUCKDB_SOURCE}/third_party/concurrentqueue
+    ${DUCKDB_SOURCE}/third_party/pcg
+    ${DUCKDB_SOURCE}/third_party/tdigest
+    ${DUCKDB_SOURCE}/third_party/mbedtls/include
+    ${DUCKDB_SOURCE}/third_party/yyjson/include
+    ${DUCKDB_SOURCE}/third_party/skiplist
 )
 target_link_libraries(bench_batch_accumulator PRIVATE vector_gpu_host)
 

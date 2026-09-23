@@ -1,17 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
-project(ChronosGpuEngine LANGUAGES C CXX CUDA)
+project(VectisDB VERSION 1.0.0 LANGUAGES CXX CUDA)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+option(VECTISDB_BUILD_GPU_SHELL "Build the DuckDB-linked VectisDB shell" OFF)
+option(VECTISDB_BUILD_TESTS "Build CUDA engine test targets" ON)
 
-option(CHRONOS_BUILD_SHELL "Build standalone duckdb_gpu shell" ON)
-option(CHRONOS_BUILD_TESTS "Build GPU engine tests" ON)
+if(NOT DEFINED VECTOR_GPU_BUILD_TESTS)
+    set(VECTOR_GPU_BUILD_TESTS "${VECTISDB_BUILD_TESTS}" CACHE BOOL "Build CUDA engine tests")
+endif()
 
-add_subdirectory(cuda_engine)
-add_subdirectory(extension)
-
-if(CHRONOS_BUILD_SHELL AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/gpu_shell/CMakeLists.txt")
+# The shell adds cuda_engine itself and needs an existing DuckDB core build.
+if(VECTISDB_BUILD_GPU_SHELL)
     add_subdirectory(gpu_shell)
+else()
+    add_subdirectory(cuda_engine)
 endif()

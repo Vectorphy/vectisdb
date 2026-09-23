@@ -1,0 +1,34 @@
+name: Developer release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  source-package:
+    name: Package source release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create source package and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          package="VectisDB-${GITHUB_REF_NAME}-source.zip"
+          git archive --format=zip \
+            --prefix="VectisDB-${GITHUB_REF_NAME}/" \
+            --output="$package" \
+            "$GITHUB_REF_NAME"
+          sha256sum "$package" > "${package}.sha256"
+          gh release create "$GITHUB_REF_NAME" "$package" "${package}.sha256" \
+            --title "VectisDB ${GITHUB_REF_NAME} developer release" \
+            --notes-file CHANGELOG.md \
+            --prerelease
