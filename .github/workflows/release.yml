@@ -28,7 +28,16 @@ jobs:
             --output="$package" \
             "$GITHUB_REF_NAME"
           sha256sum "$package" > "${package}.sha256"
-          gh release create "$GITHUB_REF_NAME" "$package" "${package}.sha256" \
-            --title "VectisDB ${GITHUB_REF_NAME} developer release" \
-            --notes-file CHANGELOG.md \
-            --prerelease
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists, updating notes and assets..."
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "VectisDB ${GITHUB_REF_NAME} developer release" \
+              --notes-file CHANGELOG.md \
+              --prerelease
+            gh release upload "$GITHUB_REF_NAME" "$package" "${package}.sha256" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$package" "${package}.sha256" \
+              --title "VectisDB ${GITHUB_REF_NAME} developer release" \
+              --notes-file CHANGELOG.md \
+              --prerelease
+          fi
