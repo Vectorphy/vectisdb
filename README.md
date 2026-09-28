@@ -1,20 +1,22 @@
 # VectisDB
 
-VectisDB is an experimental DuckDB GPU execution project. Version **1.0.0** is a developer release.
+VectisDB is an experimental DuckDB GPU execution project. Version 1.0.0 is a developer release.
 It contains a CUDA execution library, DuckDB optimizer and operator integration, and an optional shell
-that links the integration into DuckDB.
+that links the integration into DuckDB. Most of the code was written by AI tools; see the
+[AI policy](AI_POLICY.md).
 
 ## DuckDB version
 
-The DuckDB core build used for this release reports **v1.6.0-dev11577** and is pinned to commit
-`af1b4a9bd2`. This is DuckDB's development version, not VectisDB's version. The label
-`gpu-v0.2.0-20-g4583f50964` refers to the GPU project revision. The `duckdb_gpu` executable is produced
-by the build and is not included in the repository.
+The DuckDB core build used for this release reports v1.6.0-dev11577 and is pinned to commit
+`af1b4a9bd2`. That is DuckDB's development version, not VectisDB's. The label
+`gpu-v0.2.0-20-g4583f50964` is the GPU project revision.
+
+The build produces the `duckdb_gpu` executable. It is not in the repository.
 
 ## Repository layout
 
 - `cuda_engine/` contains the CUDA, NVRTC, memory, cache, and execution code.
-- `extension/` contains the DuckDB optimizer and physical operator integration.
+- `extension/` holds the DuckDB optimizer and physical operator integration.
 - `gpu_shell/` builds an optional DuckDB-linked command-line executable and holds GPU integration checks.
 - `SETUP.md` records the pinned DuckDB source and build steps.
 - `SYSTEM_OPTIMIZATION_GUIDE.md` documents the runtime controls that exist in this version.
@@ -55,9 +57,9 @@ must be compiled for the target CUDA architecture.
 
 - [Contributing](CONTRIBUTING.md) explains how to report a bug and prepare a change.
 - [Code of Conduct](CODE_OF_CONDUCT.md) sets expectations for project discussions.
-- [Security policy](SECURITY.md) explains how to report a vulnerability privately.
-- [AI policy](AI_POLICY.md) covers the use of AI tools in contributions.
-- [License](LICENSE) contains the VectisDB license and third-party notices.
+- [Security policy](SECURITY.md) describes how to report a vulnerability privately.
+- [AI policy](AI_POLICY.md) explains how the code was built with AI tools and what that means for contributors.
+- [License](LICENSE) has the VectisDB license and third-party notices.
 
 Use the issue forms under `.github/ISSUE_TEMPLATE/` for bugs and feature requests. Pull requests
 use `.github/PULL_REQUEST_TEMPLATE.md`.
