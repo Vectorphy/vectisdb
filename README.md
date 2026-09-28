@@ -5,6 +5,11 @@ It contains a CUDA execution library, DuckDB optimizer and operator integration,
 that links the integration into DuckDB. Most of the code was written by AI tools; see the
 [AI policy](AI_POLICY.md).
 
+## Project status
+
+VectisDB is a rapid prototype used to test a technical approach. It is not production software,
+and the repository should not be treated as a finished or supported product.
+
 ## DuckDB version
 
 The DuckDB core build used for this release reports v1.6.0-dev11577 and is pinned to commit
